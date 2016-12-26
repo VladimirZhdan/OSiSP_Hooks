@@ -63,56 +63,61 @@ int _tmain(int argc, TCHAR *argv[])
 	if (argc > 1)
 	{
 		std::wcout << argv[1] << std::endl;
-	}	
 
-	//std::wstring arg(L"C:\\WINDOWS\\REGEDIT.EXE");
-	//C:\\WINDOWS\\SYSTEM32\\NOTEPAD.EXE"
-	//"C:\\WINDOWS\\REGEDIT.EXE"
-	//std::wstring arg(L"C:/Program Files (x86)/Notepad++/notepad++.exe");
-	std::wstring arg(L"E:\\Ждан Вова\\БГУИР\\3 курс\\5 семестр\\ОСиСП\\Лабораторные работы\\6-я лаба Hooks\\OSiSP_Hooks\\Debug\\Uninstaller.exe");
-	const wchar_t * processName = arg.c_str();
+		std::wstring arg(argv[1]);
+		//std::wstring arg(L"C:\\WINDOWS\\REGEDIT.EXE");
+		//C:\\WINDOWS\\SYSTEM32\\NOTEPAD.EXE"
+		//"C:\\WINDOWS\\REGEDIT.EXE"
+		//std::wstring arg(L"C:/Program Files (x86)/Notepad++/notepad++.exe");
+		//std::wstring arg(L"E:\\Ждан Вова\\БГУИР\\3 курс\\5 семестр\\ОСиСП\\Лабораторные работы\\6-я лаба Hooks\\OSiSP_Hooks\\Debug\\Uninstaller.exe");
+		const wchar_t * processName = arg.c_str();
 
-	STARTUPINFO startUpInfo = { sizeof(startUpInfo) };
-	SECURITY_ATTRIBUTES secAtrProcess, secAtrThread;
-	PROCESS_INFORMATION procInfo;		
+		STARTUPINFO startUpInfo = { sizeof(startUpInfo) };
+		SECURITY_ATTRIBUTES secAtrProcess, secAtrThread;
+		PROCESS_INFORMATION procInfo;
 
-	secAtrProcess.nLength = sizeof(secAtrProcess);
-	secAtrProcess.lpSecurityDescriptor = NULL;
-	secAtrProcess.bInheritHandle = TRUE;
-	secAtrThread.nLength = sizeof(secAtrThread);
-	secAtrThread.lpSecurityDescriptor = NULL;
-	secAtrThread.bInheritHandle = FALSE;	
+		secAtrProcess.nLength = sizeof(secAtrProcess);
+		secAtrProcess.lpSecurityDescriptor = NULL;
+		secAtrProcess.bInheritHandle = TRUE;
+		secAtrThread.nLength = sizeof(secAtrThread);
+		secAtrThread.lpSecurityDescriptor = NULL;
+		secAtrThread.bInheritHandle = FALSE;
 
-	TCHAR commandLine[] = L"";	
-		
-	if (CreateProcess(processName, commandLine, &secAtrProcess, &secAtrThread, FALSE, CREATE_SUSPENDED, NULL, NULL, &startUpInfo, &procInfo))
-	{
-		std::cout << "program is running" << std::endl;;
+		TCHAR commandLine[] = L"";
+
+		if (CreateProcess(processName, commandLine, &secAtrProcess, &secAtrThread, FALSE, CREATE_SUSPENDED, NULL, NULL, &startUpInfo, &procInfo))
+		{
+			std::cout << "program is running" << std::endl;;
+		}
+		else
+		{
+			std::cout << "error while starting program" << std::endl;
+			int error = GetLastError();
+		}
+
+		if (LoadDllToProcessUsingRemoteThread(procInfo.hProcess, L"E:/Ждан Вова/БГУИР/3 курс/5 семестр/ОСиСП/Лабораторные работы/6-я лаба Hooks/OSiSP_Hooks/Debug/OSiSP_Logging"))
+		{
+			std::cout << "loading dll finished" << std::endl;
+			ResumeThread(procInfo.hThread);
+		}
+		else
+		{
+			std::cout << "error while loading dll" << std::endl;
+		}
+
+		if (procInfo.hThread != NULL)
+		{
+			CloseHandle(procInfo.hThread);
+		}
+		if (procInfo.hProcess != NULL)
+		{
+			CloseHandle(procInfo.hProcess);
+		}
 	}
 	else
 	{
-		std::cout << "error while starting program" << std::endl;
-		int error = GetLastError();
-	}			
-
-	if (LoadDllToProcessUsingRemoteThread(procInfo.hProcess, L"E:/Ждан Вова/БГУИР/3 курс/5 семестр/ОСиСП/Лабораторные работы/6-я лаба Hooks/OSiSP_Hooks/Debug/OSiSP_Logging"))
-	{
-		std::cout << "loading dll finished" << std::endl;		
-		ResumeThread(procInfo.hThread);
-	}
-	else
-	{
-		std::cout << "error while loading dll" << std::endl;
+		std::cout << "Too few arguments" << std::endl;
 	}	
-
-	if (procInfo.hThread != NULL)
-	{
-		CloseHandle(procInfo.hThread);
-	}
-	if (procInfo.hProcess != NULL)
-	{
-		CloseHandle(procInfo.hProcess);
-	}
 
 	system("pause");
 	return 0;
