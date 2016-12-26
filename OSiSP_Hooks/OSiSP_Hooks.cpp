@@ -2,9 +2,8 @@
 //
 
 #include "stdafx.h"
-#include <Windows.h>
+#include <windows.h>
 #include <iostream>
-
 
 BOOL WINAPI LoadDllToProcessUsingRemoteThread(HANDLE hProcess, PCWSTR dllName)
 {
@@ -39,8 +38,7 @@ BOOL WINAPI LoadDllToProcessUsingRemoteThread(HANDLE hProcess, PCWSTR dllName)
 			__leave;			
 		}
 
-		hThread = CreateRemoteThread(hProcess, NULL, 0, pfnThreadRtn, remoteFileName, 0, NULL);
-
+		hThread = CreateRemoteThread(hProcess, NULL, 0, pfnThreadRtn, remoteFileName, 0, NULL);		
 		if (hThread == NULL)
 		{
 			__leave;
@@ -53,7 +51,7 @@ BOOL WINAPI LoadDllToProcessUsingRemoteThread(HANDLE hProcess, PCWSTR dllName)
 	{
 		if (remoteFileName != NULL) VirtualFreeEx(hProcess, remoteFileName, 0, MEM_RELEASE);
 		if (hThread != NULL) CloseHandle(hThread);
-		if (hProcess != NULL) CloseHandle(hProcess);
+		//if (hProcess != NULL) CloseHandle(hProcess);
 	}
 	return result;
 }
@@ -67,25 +65,27 @@ int _tmain(int argc, TCHAR *argv[])
 		std::wcout << argv[1] << std::endl;
 	}	
 
-	//const TCHAR* processName = argv[1];
-	TCHAR* processName = L"e:\\Ждан Вова\\БГУИР\\3 курс\\5 семестр\\ОСиСП\\Лабораторные работы\\6-я лаба Hooks\\OSiSP_Hooks\\Debug\\OSiSP_PhoneBook.exe";
+	//std::wstring arg(L"C:\\WINDOWS\\REGEDIT.EXE");
+	//C:\\WINDOWS\\SYSTEM32\\NOTEPAD.EXE"
+	//"C:\\WINDOWS\\REGEDIT.EXE"
+	//std::wstring arg(L"C:/Program Files (x86)/Notepad++/notepad++.exe");
+	std::wstring arg(L"E:\\Ждан Вова\\БГУИР\\3 курс\\5 семестр\\ОСиСП\\Лабораторные работы\\6-я лаба Hooks\\OSiSP_Hooks\\Debug\\Uninstaller.exe");
+	const wchar_t * processName = arg.c_str();
 
 	STARTUPINFO startUpInfo = { sizeof(startUpInfo) };
 	SECURITY_ATTRIBUTES secAtrProcess, secAtrThread;
-	PROCESS_INFORMATION procInfo;	
-
-	ZeroMemory(&procInfo, sizeof(procInfo));
-	ZeroMemory(&startUpInfo, sizeof(startUpInfo));
+	PROCESS_INFORMATION procInfo;		
 
 	secAtrProcess.nLength = sizeof(secAtrProcess);
 	secAtrProcess.lpSecurityDescriptor = NULL;
 	secAtrProcess.bInheritHandle = TRUE;
 	secAtrThread.nLength = sizeof(secAtrThread);
 	secAtrThread.lpSecurityDescriptor = NULL;
-	secAtrThread.bInheritHandle = FALSE;
+	secAtrThread.bInheritHandle = FALSE;	
 
-	TCHAR commandLine[] = _T("");	
-	if (CreateProcess(processName, commandLine, &secAtrProcess, &secAtrThread, FALSE, 0, NULL, NULL, &startUpInfo, &procInfo))
+	TCHAR commandLine[] = L"";	
+		
+	if (CreateProcess(processName, commandLine, &secAtrProcess, &secAtrThread, FALSE, CREATE_SUSPENDED, NULL, NULL, &startUpInfo, &procInfo))
 	{
 		std::cout << "program is running" << std::endl;;
 	}
@@ -93,15 +93,25 @@ int _tmain(int argc, TCHAR *argv[])
 	{
 		std::cout << "error while starting program" << std::endl;
 		int error = GetLastError();
-	}
+	}			
 
-	if (LoadDllToProcessUsingRemoteThread(procInfo.hProcess, L"OSiSP_Logging"))
+	if (LoadDllToProcessUsingRemoteThread(procInfo.hProcess, L"E:/Ждан Вова/БГУИР/3 курс/5 семестр/ОСиСП/Лабораторные работы/6-я лаба Hooks/OSiSP_Hooks/Debug/OSiSP_Logging"))
 	{
-		std::cout << "loading dll finished" << std::endl;
+		std::cout << "loading dll finished" << std::endl;		
+		ResumeThread(procInfo.hThread);
 	}
 	else
 	{
 		std::cout << "error while loading dll" << std::endl;
+	}	
+
+	if (procInfo.hThread != NULL)
+	{
+		CloseHandle(procInfo.hThread);
+	}
+	if (procInfo.hProcess != NULL)
+	{
+		CloseHandle(procInfo.hProcess);
 	}
 
 	system("pause");
